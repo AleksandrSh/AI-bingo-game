@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Acumen Bingo - EMEA J&C AI in Action</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #ffd93d;
+        }
+
+        .instructions ul {
+            list-style-position: inside;
+            line-height: 1.8;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .team-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            min-width: 200px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: #ffd93d;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #ffcd1f;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #6bcf7f;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #51b86c;
+        }
+
+        .bingo-card {
+            background: white;
+            color: #333;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .team-name {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1e3c72;
+        }
+
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .bingo-cell {
+            aspect-ratio: 1;
+            border: 2px solid #2a5298;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bingo-cell:hover {
+            background: #f0f8ff;
+            transform: scale(1.05);
+        }
+
+        .bingo-cell.marked {
+            background: linear-gradient(135deg, #6bcf7f 0%, #51b86c 100%);
+            color: white;
+            border-color: #51b86c;
+        }
+
+        .bingo-cell.marked::after {
+            content: "✓";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .bingo-cell.free {
+            background: linear-gradient(135deg, #ffd93d 0%, #ffcd1f 100%);
+            color: #333;
+            font-weight: bold;
+        }
+
+        .winner-banner {
+            background: linear-gradient(135deg, #ffd93d 0%, #ff6b6b 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+            display: none;
+        }
+
+        .winner-banner.show {
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .certificate {
+            background: white;
+            color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            border: 10px double #1e3c72;
+            margin: 30px auto;
+            max-width: 800px;
+            text-align: center;
+            display: none;
+        }
+
+        .certificate.show {
+            display: block;
+        }
+
+        .certificate h2 {
+            color: #1e3c72;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .certificate .ornament {
+            font-size: 3em;
+            color: #ffd93d;
+            margin: 20px 0;
+        }
+
+        .certificate .recipient {
+            font-size: 2em;
+            color: #ff6b6b;
+            margin: 30px 0;
+            font-weight: bold;
+        }
+
+        .certificate .description {
+            font-size: 1.2em;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .certificate .signature {
+            margin-top: 40px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .reflection-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .reflection-section.show {
+            display: block;
+        }
+
+        .reflection-section h3 {
+            color: #ffd93d;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .teams-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .bingo-cell { font-size: 0.65em; }
+            .teams-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .modal-content h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 AI Acumen Bingo</h1>
+            <div class="subtitle">EMEA J&C AI in Action Team</div>
+            <p>Explore AI resources while having fun!</p>
+        </header>
+
+        <div class="instructions">
+            <h3>📋 How to Play:</h3>
+            <ul>
+                <li><strong>Form Teams:</strong> Divide into small groups (2-4 people per team)</li>
+                <li><strong>Get Your Card:</strong> Each team gets a unique bingo card with AI resource challenges</li>
+                <li><strong>Complete Challenges:</strong> Find and explore the resources mentioned in each square (use the AI Acumen guide provided)</li>
+                <li><strong>Mark Your Progress:</strong> Click a square once you've found/explored that resource</li>
+                <li><strong>Win:</strong> First team to complete a row, column, or diagonal shouts "BINGO!" and wins!</li>
+                <li><strong>Reflect:</strong> After the game, everyone shares one thing they learned</li>
+            </ul>
+        </div>
+
+        <div class="winner-banner" id="winnerBanner"></div>
+
+        <div class="game-controls">
+            <div class="team-input">
+                <input type="text" id="teamNameInput" placeholder="Enter team name...">
+                <button class="btn-primary" onclick="addTeam()">➕ Add Team</button>
+            </div>
+            <button class="btn-secondary" onclick="resetGame()">🔄 Reset Game</button>
+        </div>
+
+        <div class="teams-container" id="teamsContainer"></div>
+
+        <div class="certificate" id="certificate">
+            <h2>🏆 Certificate of Achievement 🏆</h2>
+            <div class="ornament">★ ✧ ★</div>
+            <div style="font-size: 1.5em; color: #1e3c72;">This certifies that</div>
+            <div class="recipient" id="winnerName">Team Name</div>
+            <div class="description">
+                has demonstrated exceptional <strong>AI Acumen</strong><br>
+                by successfully exploring and mastering AI resources<br>
+                in the AI Acumen Bingo Challenge
+            </div>
+            <div class="ornament">⚡ 🤖 ⚡</div>
+            <div class="signature">
+                Awarded by the<br>
+                <strong>EMEA J&C AI in Action Team</strong><br>
+                February 2026
+            </div>
+        </div>
+
+        <div class="reflection-section" id="reflectionSection">
+            <h3>💭 Time to Reflect & Share!</h3>
+            <p style="margin-bottom: 15px;">Now that we've explored these AI resources together, let's share what we learned:</p>
+            <p style="margin-bottom: 10px; font-weight: bold;">What's one thing you didn't know that you learned from today's game?</p>
+            <textarea placeholder="Share your insights here... (Each team member can take turns sharing verbally or write your team's collective insights here)"></textarea>
+            <button class="btn-success" style="margin-top: 15px;" onclick="alert('Thank you for sharing! These insights help us grow together in our AI journey.')">Share Reflection</button>
+        </div>
+    </div>
+
+    <div class="modal" id="cellModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">×</span>
+            <h3 id="modalTitle"></h3>
+            <p id="modalContent"></p>
+            <button class="btn-success" onclick="markAndClose()">✓ Mark Complete</button>
+        </div>
+    </div>
+
+    <script>
+        const bingoItems = [
+            // People & Communities
+            { text: "Follow Allie K. Miller", category: "people", hint: "Outside Cisco AI influencer - find her profile" },
+            { text: "Follow Andrew Ng", category: "people", hint: "AI education pioneer - check out his courses" },
+            { text: "Follow Mustafa Suleyman", category: "people", hint: "DeepMind co-founder - explore his work" },
+            { text: "Follow Ethan Mollick", category: "people", hint: "AI in work expert - find his research" },
+            { text: "Follow Dr. Joy Buolamwini", category: "people", hint: "AI ethics advocate - learn about algorithmic justice" },
+            { text: "Follow Jaeden Schaffer", category: "people", hint: "AI thought leader - find their LinkedIn" },
+            { text: "Follow Connor Grennan", category: "people", hint: "Author on AI - discover his books" },
+            { text: "Connect with Jeetu Patel", category: "people", hint: "Inside Cisco - Executive leadership" },
+            { text: "Connect with DJ Sampath", category: "people", hint: "Inside Cisco - AI implementation" },
+            { text: "Connect with Aruna Ravichandran", category: "people", hint: "Inside Cisco - Tech innovation" },
+            { text: "Join AI Communities", category: "people", hint: "Inside Cisco - Find internal AI groups" },
+            { text: "Join Cisco Foundation AI Group", category: "people", hint: "LLMs for Cyber Security - explore their work" },
+            
+            // Newsletters
+            { text: "Subscribe to The Rundown AI", category: "newsletter", hint: "Daily AI news - sign up for updates" },
+            { text: "Subscribe to The Neuron", category: "newsletter", hint: "AI insights newsletter - get the latest" },
+            { text: "Subscribe to AI Mindset", category: "newsletter", hint: "AI thinking - explore perspectives" },
+            { text: "Subscribe to The Batch", category: "newsletter", hint: "Andrew Ng's newsletter - weekly AI news" },
+            { text: "Subscribe to Superhuman AI", category: "newsletter", hint: "Productivity with AI - learn techniques" },
+            { text: "Subscribe to TLDR", category: "newsletter", hint: "Tech news digest - stay informed" },
+            { text: "Read Cisco Tech Pulse", category: "newsletter", hint: "Inside Cisco - internal tech newsletter" },
+            
+            // Podcasts
+            { text: "Listen to The Neuron: AI Explained", category: "podcast", hint: "AI concepts simplified - find an episode" },
+            { text: "Listen to NVIDIA AI Podcast", category: "podcast", hint: "Conversations with AI leaders" },
+            { text: "Listen to AI Applied", category: "podcast", hint: "Practical AI applications" },
+            
+            // Trainings
+            { text: "Start Edge Up Skills Studio", category: "training", hint: "Cisco's AI learning platform" },
+            { text: "Complete IBM AI Fundamentals", category: "training", hint: "Free course - get certified" },
+            { text: "Try Google Intro to Gen AI", category: "training", hint: "Free course - learn the basics" },
+            { text: "Explore Deeplearning.ai", category: "training", hint: "AI for Everyone - free course" },
+            { text: "Learn AI Lab for Recruiters", category: "training", hint: "ChatGPT for recruiting - practical skills" },
+            { text: "Study Gen AI in Workplace", category: "training", hint: "How to use AI effectively at work" },
+            { text: "Review Next-Gen Hiring with AI", category: "training", hint: "Navigate candidates' AI use" },
+            { text: "Learn AI Data Privacy", category: "training", hint: "Hiring with integrity - data protection" },
+            { text: "Explore Automate Sourcing with AI", category: "training", hint: "Innovation in recruitment" }
+        ];
+
+        let teams = [];
+        let currentCellData = null;
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function generateBingoCard() {
+            const shuffled = shuffleArray(bingoItems);
+            const card = shuffled.slice(0, 24);
+            card.splice(12, 0, { text: "FREE SPACE", category: "free", hint: "Start here!" });
+            return card.map((item, index) => ({
+                ...item,
+                marked: index === 12,
+                index: index
+            }));
+        }
+
+        function addTeam() {
+            const input = document.getElementById('teamNameInput');
+            const teamName = input.value.trim();
+            
+            if (!teamName) {
+                alert('Please enter a team name!');
+                return;
+            }
+
+            const team = {
+                name: teamName,
+                card: generateBingoCard(),
+                wins: false
+            };
+
+            teams.push(team);
+            input.value = '';
+            renderTeams();
+        }
+
+        function renderTeams() {
+            const container = document.getElementById('teamsContainer');
+            container.innerHTML = '';
+
+            teams.forEach((team, teamIndex) => {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = 'bingo-card';
+                teamDiv.innerHTML = `
+                    <div class="team-name">${team.name}</div>
+                    <div class="bingo-grid" id="grid-${teamIndex}"></div>
+                `;
+                container.appendChild(teamDiv);
+
+                const grid = document.getElementById(`grid-${teamIndex}`);
+                team.card.forEach((cell, cellIndex) => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = `bingo-cell ${cell.marked ? 'marked' : ''} ${cell.category === 'free' ? 'free' : ''}`;
+                    cellDiv.textContent = cell.text;
+                    cellDiv.onclick = () => openCellModal(teamIndex, cellIndex);
+                    grid.appendChild(cellDiv);
+                });
+            });
+        }
+
+        function openCellModal(teamIndex, cellIndex) {
+            const cell = teams[teamIndex].card[cellIndex];
+            
+            if (cell.category === 'free') {
+                return;
+            }
+
+            currentCellData = { teamIndex, cellIndex };
+            document.getElementById('modalTitle').textContent = cell.text;
+            document.getElementById('modalContent').innerHTML = `
+                <p><strong>Challenge:</strong> ${cell.hint}</p>
+                <p style="margin-top: 10px; color: #666;"><em>Once you've completed this challenge, mark it complete!</em></p>
+            `;
+            document.getElementById('cellModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('cellModal').classList.remove('show');
+            currentCellData = null;
+        }
+
+        function markAndClose() {
+            if (!currentCellData) return;
+
+            const { teamIndex, cellIndex } = currentCellData;
+            teams[teamIndex].card[cellIndex].marked = true;
+            
+            closeModal();
+            renderTeams();
+            checkWinner(teamIndex);
+        }
+
+        function checkWinner(teamIndex) {
+            const team = teams[teamIndex];
+            const card = team.card;
+            
+            // Check rows
+            for (let row = 0; row < 5; row++) {
+                if (card.slice(row * 5, row * 5 + 5).every(cell => cell.marked)) {
+                    declareWinner(team);
+                    return;
+                }
+            }
+
+            // Check columns
+            for (let col = 0; col < 5; col++) {
+                if ([0, 1, 2, 3, 4].every(row => card[row * 5 + col].marked)) {
+                    declareWinner(team);
+                    return;
+                }
+            }
+
+            // Check diagonals
+            if ([0, 6, 12, 18, 24].every(i => card[i].marked)) {
+                declareWinner(team);
+                return;
+            }
+            if ([4, 8, 12, 16, 20].every(i => card[i].marked)) {
+                declareWinner(team);
+                return;
+            }
+        }
+
+        function declareWinner(team) {
+            if (team.wins) return;
+            
+            team.wins = true;
+            
+            const banner = document.getElementById('winnerBanner');
+            banner.textContent = `🎉 ${team.name} WINS! BINGO! 🎉`;
+            banner.classList.add('show');
+
+            const certificate = document.getElementById('certificate');
+            document.getElementById('winnerName').textContent = team.name;
+            certificate.classList.add('show');
+
+            document.getElementById('reflectionSection').classList.add('show');
+
+            setTimeout(() => {
+                certificate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
+        }
+
+        function resetGame() {
+            if (confirm('Are you sure you want to reset the game? All progress will be lost.')) {
+                teams = [];
+                renderTeams();
+                document.getElementById('winnerBanner').classList.remove('show');
+                document.getElementById('certificate').classList.remove('show');
+                document.getElementById('reflectionSection').classList.remove('show');
+            }
+        }
+
+        // Initialize with example team (optional - remove this in production)
+        // Uncomment the line below to start with a demo team
+        // teams.push({ name: "Demo Team", card: generateBingoCard(), wins: false });
+        // renderTeams();
+    </script>
+</body>
+</html>
