@@ -647,7 +647,6 @@
   <!-- Controls -->
   <div class="controls">
     <button class="ctrl-btn primary" onclick="showReflection()">🎤 Reflection Round</button>
-    <button class="ctrl-btn secondary" onclick="resetGame()">↺ Reset Game</button>
   </div>
 
   <!-- Reflection -->
@@ -676,9 +675,10 @@
     <span class="trophy-icon">🏆</span>
     <h2>BINGO!</h2>
     <div class="cert-winner-name" id="cert-winner-name"></div>
+    <div id="cert-place-line" style="font-size:1rem;font-weight:700;margin-bottom:4px;"></div>
     <div class="certificate">
       <div class="cert-title">Certificate of Achievement</div>
-      <div class="cert-main">🥇 Best AI Acumen</div>
+      <div class="cert-main" id="cert-main-line">🥇 Best AI Acumen</div>
       <div class="cert-sub">Awarded for excellence in AI knowledge, curiosity &amp; speed</div>
       <div class="cert-awarded">Presented by the <strong>EMEA J&amp;C AI in Action Team</strong></div>
     </div>
@@ -1165,6 +1165,22 @@ function showWinner(team) {
   const label = getTeamLabel(team);
   document.getElementById('cert-winner-name').textContent = label;
   document.getElementById('cert-winner-name').style.color = team.color;
+
+  var finished = teams
+    .filter(function(t) { return t.bingos > 0; })
+    .sort(function(a, b) {
+      var aT = a.firstBingoAt || a.lastBingoAt || Infinity;
+      var bT = b.firstBingoAt || b.lastBingoAt || Infinity;
+      return aT - bT;
+    });
+  var place = finished.findIndex(function(t) { return t.id === team.id; }) + 1;
+  var placeEmojis = ['🥇', '🥈', '🥉'];
+  var placeEmoji = placeEmojis[place - 1] || '🏅';
+  var placeText = place > 0 ? placeEmoji + ' ' + getOrdinal(place) + ' Place!' : '';
+
+  document.getElementById('cert-place-line').textContent = placeText;
+  document.getElementById('cert-place-line').style.color = place === 1 ? '#ffd700' : place === 2 ? '#c0c0c0' : place === 3 ? '#cd7f32' : 'var(--muted)';
+  document.getElementById('cert-main-line').textContent = placeEmoji + ' Best AI Acumen';
   document.getElementById('winner-modal').classList.add('show');
 }
 
@@ -1179,27 +1195,6 @@ function showReflection() {
   s.scrollIntoView({ behavior: 'smooth' });
 }
 
-// ── Reset ────────────────────────────────────────────────────────────────────
-async function resetGame() {
-  if (!confirm('Reset the game? All progress will be lost.')) return;
-  if (!gameId) return;
-  const { teamsRef } = getRefs(gameId);
-
-  const batch = writeBatch(db);
-  teams.forEach(function(t) {
-    batch.update(doc(teamsRef, t.id), {
-      marked: [FREE_INDEX],
-      claimedLines: [],
-      bingos: 0,
-      lastBingoAt: 0,
-      lastBingoKey: '',
-      firstBingoAt: 0
-    });
-  });
-  await batch.commit();
-
-  document.getElementById('reflection-section').classList.remove('show');
-}
 
 // ── Confetti ─────────────────────────────────────────────────────────────────
 function launchConfetti(teamColor) {
@@ -1347,8 +1342,9 @@ async function initMultiplayer() {
       return;
     }
 
-    if (!activeTeamId) activeTeamId = teams[0] ? teams[0].id : null;
-    if (activeTeamId && !teams.some(function(t) { return t.id === activeTeamId; })) activeTeamId = teams[0] ? teams[0].id : null;
+    var myId = getMyTeamId();
+    if (!activeTeamId) activeTeamId = myId || (teams[0] ? teams[0].id : null);
+    if (activeTeamId && !teams.some(function(t) { return t.id === activeTeamId; })) activeTeamId = myId || (teams[0] ? teams[0].id : null);
 
     totalBingos = teams.reduce(function(sum, t) { return sum + (t.bingos || 0); }, 0);
 
@@ -1387,7 +1383,6 @@ async function copyGameLink() {
 window.setTeamName = setTeamName;
 window.removeTeam = removeTeam;
 window.showReflection = showReflection;
-window.resetGame = resetGame;
 window.closeModal = closeModal;
 window.copyGameLink = copyGameLink;
 window.openRenameOverlay = openRenameOverlay;
