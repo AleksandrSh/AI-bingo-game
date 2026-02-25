@@ -208,6 +208,7 @@
   }
 
   .team-tab.active-tab { transform: scale(1.06); }
+  .team-tab.rename-btn { padding: 6px 8px; font-size: 0.82rem; background: rgba(255,255,255,0.04); border: none; }
 
   /* ── Score Strip ── */
   .score-strip {
@@ -240,16 +241,52 @@
 
   .score-divider { width: 1px; height: 52px; background: var(--card-border); }
 
-  /* ── Progress Bar ── */
+  /* ── Progress Bars ── */
   .progress-wrap {
     background: var(--card-bg); border: 1px solid var(--card-border);
     border-radius: 12px; padding: 14px 20px; margin-bottom: 22px;
   }
 
-  .progress-label {
-    font-family: 'Syne', sans-serif; font-size: 0.65rem; font-weight: 700;
+  .progress-wrap-title {
+    font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 700;
     color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase;
-    margin-bottom: 8px; display: flex; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .progress-team-row {
+    margin-bottom: 10px;
+  }
+  .progress-team-row:last-child { margin-bottom: 0; }
+
+  .progress-bingo-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: rgba(255, 215, 0, 0.15); color: #ffd700;
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em;
+    padding: 1px 7px; border-radius: 6px; margin-left: 6px;
+  }
+
+  .progress-place-badge {
+    display: inline-flex; align-items: center;
+    font-size: 0.58rem; font-weight: 800; letter-spacing: 0.04em;
+    padding: 1px 7px; border-radius: 6px; margin-left: 4px;
+  }
+  .place-1st { background: rgba(255, 215, 0, 0.18); color: #ffd700; }
+  .place-2nd { background: rgba(192, 192, 192, 0.18); color: #c0c0c0; }
+  .place-3rd { background: rgba(205, 127, 50, 0.18); color: #cd7f32; }
+  .place-other { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
+
+  .progress-label {
+    font-family: 'Syne', sans-serif; font-size: 0.62rem; font-weight: 700;
+    color: var(--muted); letter-spacing: 0.10em; text-transform: uppercase;
+    margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .progress-team-name {
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .progress-color-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
   }
 
   .progress-bar-bg {
@@ -259,7 +296,6 @@
 
   .progress-bar-fill {
     height: 100%; border-radius: 8px;
-    background: linear-gradient(90deg, var(--cisco-blue), var(--cisco-teal), var(--neon));
     transition: width 0.4s ease; width: 0%;
   }
 
@@ -519,8 +555,8 @@
 <!-- Team name entry overlay -->
 <div class="name-entry-overlay" id="name-entry-overlay">
   <div class="name-entry-box">
-    <h3>Name your team</h3>
-    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Choose a team name. You control your team's board and everyone can see your progress.</p>
+    <h3 id="overlay-title">Name your team</h3>
+    <p id="overlay-subtitle" style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Choose a team name. You control your team's board and everyone can see your progress.</p>
     <input type="text" id="team-name-input" maxlength="30" placeholder="Team name..." autocomplete="off" />
     <button class="ctrl-btn primary" id="join-game-btn" type="button">Join game</button>
   </div>
@@ -572,9 +608,9 @@
   <!-- Score Strip -->
   <div class="score-strip">
     <div class="score-block">
-      <div class="label">Squares Completed</div>
+      <div class="label">Best Line</div>
       <div class="value" id="squares-count">0</div>
-      <div class="sub-value">out of 24</div>
+      <div class="sub-value">of 5 to BINGO</div>
     </div>
     <div class="score-divider"></div>
     <div class="score-block">
@@ -590,15 +626,10 @@
     </div>
   </div>
 
-  <!-- Progress Bar -->
+  <!-- Progress Bars (all teams) -->
   <div class="progress-wrap">
-    <div class="progress-label">
-      <span id="progress-team-label">Progress</span>
-      <span id="progress-pct">0%</span>
-    </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progress-fill"></div>
-    </div>
+    <div class="progress-wrap-title">Progress to BINGO</div>
+    <div id="all-progress-bars"></div>
   </div>
 
   <!-- Board -->
@@ -725,11 +756,11 @@ const challenges = [
 
 const statusStages = [
   { min:0,  max:0,  emoji:'🎯', text:"Let's go!" },
-  { min:1,  max:5,  emoji:'🔥', text:"Warming up!" },
-  { min:6,  max:11, emoji:'⚡', text:"On a roll!" },
-  { min:12, max:17, emoji:'🚀', text:"Crushing it!" },
-  { min:18, max:23, emoji:'🌟', text:"Almost there!" },
-  { min:24, max:24, emoji:'🏆', text:"Full board!" },
+  { min:1,  max:1,  emoji:'🔥', text:"Warming up!" },
+  { min:2,  max:2,  emoji:'⚡', text:"On a roll!" },
+  { min:3,  max:3,  emoji:'🚀', text:"Getting close!" },
+  { min:4,  max:4,  emoji:'🌟', text:"Almost there!" },
+  { min:5,  max:5,  emoji:'🏆', text:"BINGO!" },
 ];
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -833,6 +864,7 @@ async function addTeam(teamName) {
     claimedLines: [],
     lastBingoAt: 0,
     lastBingoKey: '',
+    firstBingoAt: 0,
     createdAt: Date.now()
   });
 
@@ -871,12 +903,9 @@ function renderTeamInputs() {
     row.id = 'input-row-' + t.id;
     const idJs = JSON.stringify(t.id);
     const isMine = isMyTeam(t);
-    const nameHtml = isMine
-      ? '<input class="team-name-field" type="text" maxlength="30" placeholder="Team name..." value="' + escHtml(t.name) + '" oninput="setTeamName(' + idJs + ', this.value)" style="caret-color:' + t.color + '" />'
-      : '<span class="team-name-field" style="color:var(--muted);">' + escHtml(getTeamLabel(t)) + '</span>';
     row.innerHTML =
       '<div class="team-color-dot" style="background:' + t.color + '"></div>' +
-      nameHtml +
+      '<span class="team-name-field" style="color:' + (isMine ? t.color : 'var(--muted)') + ';">' + escHtml(getTeamLabel(t)) + '</span>' +
       (isMine ? '<span class="team-row-owner">(You)</span>' : '');
     grid.appendChild(row);
   });
@@ -888,7 +917,12 @@ function renderTeamTabs() {
   const tabs = document.getElementById('team-tabs');
   wrap.style.display = teams.length > 0 ? 'flex' : 'none';
   tabs.innerHTML = '';
-  teams.forEach(t => {
+  var sorted = teams.slice().sort(function(a, b) {
+    var aMe = isMyTeam(a) ? 0 : 1;
+    var bMe = isMyTeam(b) ? 0 : 1;
+    return aMe - bMe;
+  });
+  sorted.forEach(t => {
     const btn = document.createElement('button');
     btn.className = 'team-tab' + (t.id === activeTeamId ? ' active-tab' : '');
     btn.style.borderColor = t.id === activeTeamId ? t.color : 'transparent';
@@ -897,6 +931,14 @@ function renderTeamTabs() {
     btn.textContent = getTeamLabel(t) + (isMyTeam(t) ? ' (You)' : '');
     btn.onclick = function() { activeTeamId = t.id; renderTeamTabs(); renderBoard(); updateUI(); };
     tabs.appendChild(btn);
+    if (isMyTeam(t)) {
+      const rename = document.createElement('button');
+      rename.className = 'team-tab rename-btn';
+      rename.textContent = '✏️';
+      rename.title = 'Rename your team';
+      rename.onclick = function(e) { e.stopPropagation(); openRenameOverlay(); };
+      tabs.appendChild(rename);
+    }
   });
 }
 
@@ -995,6 +1037,9 @@ async function toggleCell(idx) {
     if (newlyCompleted.length > 0) {
       update.lastBingoAt = Date.now();
       update.lastBingoKey = newlyCompleted[0];
+      if (beforeLines.length === 0 && !(data.firstBingoAt > 0)) {
+        update.firstBingoAt = Date.now();
+      }
     }
 
     tx.update(teamRef, update);
@@ -1029,24 +1074,89 @@ function animateBingoLine(lineKey) {
 }
 
 // ── Update UI ────────────────────────────────────────────────────────────────
+function getBestLineProgress(markedSet) {
+  var best = 0;
+  for (var line of getLines()) {
+    var count = line.filter(function(idx) { return markedSet.has(idx); }).length;
+    if (count > best) best = count;
+  }
+  return best;
+}
+
+function getOrdinal(n) {
+  var s = ['th','st','nd','rd'];
+  var v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function getPlaceClass(place) {
+  if (place === 1) return 'place-1st';
+  if (place === 2) return 'place-2nd';
+  if (place === 3) return 'place-3rd';
+  return 'place-other';
+}
+
+function renderAllProgressBars() {
+  const container = document.getElementById('all-progress-bars');
+  container.innerHTML = '';
+
+  var placements = teams
+    .filter(function(t) { return t.bingos > 0; })
+    .sort(function(a, b) {
+      var aTime = a.firstBingoAt || a.lastBingoAt || Infinity;
+      var bTime = b.firstBingoAt || b.lastBingoAt || Infinity;
+      return aTime - bTime;
+    });
+
+  var placeMap = {};
+  placements.forEach(function(t, i) { placeMap[t.id] = i + 1; });
+
+  var sorted = teams.slice().sort(function(a, b) {
+    var pa = placeMap[a.id] || Infinity;
+    var pb = placeMap[b.id] || Infinity;
+    if (pa !== pb) return pa - pb;
+    return getBestLineProgress(b.marked) - getBestLineProgress(a.marked);
+  });
+
+  sorted.forEach(function(t) {
+    const best = getBestLineProgress(t.marked);
+    const pct = Math.round((best / 5) * 100);
+    const label = getTeamLabel(t);
+    const youTag = isMyTeam(t.id) ? ' <span style="opacity:0.5">(You)</span>' : '';
+    const bingoCount = t.bingos || 0;
+    const place = placeMap[t.id];
+    const placeBadge = place
+      ? '<span class="progress-place-badge ' + getPlaceClass(place) + '">' + getOrdinal(place) + '</span>'
+      : '';
+    const bingoBadge = bingoCount > 0
+      ? '<span class="progress-bingo-badge">&#x1F3C6; BINGO' + (bingoCount > 1 ? ' x' + bingoCount : '') + '</span>'
+      : '';
+    const row = document.createElement('div');
+    row.className = 'progress-team-row';
+    row.innerHTML =
+      '<div class="progress-label">' +
+        '<span class="progress-team-name"><span class="progress-color-dot" style="background:' + t.color + '"></span>' + escHtml(label) + youTag + placeBadge + bingoBadge + '</span>' +
+        '<span>' + best + ' / 5</span>' +
+      '</div>' +
+      '<div class="progress-bar-bg">' +
+        '<div class="progress-bar-fill" style="width:' + pct + '%;background:' + t.color + '"></div>' +
+      '</div>';
+    container.appendChild(row);
+  });
+}
+
 function updateUI() {
   const activeTeam = teams.find(function(t) { return t.id === activeTeamId; });
-  const completed = activeTeam
-    ? Array.from(activeTeam.marked).filter(function(i) { return i !== FREE_INDEX; }).length
-    : 0;
-  const pct = Math.round((completed / 24) * 100);
+  const bestLine = activeTeam ? getBestLineProgress(activeTeam.marked) : 0;
 
-  document.getElementById('squares-count').textContent = completed;
+  document.getElementById('squares-count').textContent = bestLine;
   document.getElementById('bingo-count').textContent = totalBingos;
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-pct').textContent = pct + '%';
 
-  const label = activeTeam ? getTeamLabel(activeTeam) + "'s Progress" : 'Progress';
-  document.getElementById('progress-team-label').textContent = label;
-
-  const stage = statusStages.find(function(s) { return completed >= s.min && completed <= s.max; }) || statusStages[statusStages.length - 1];
+  const stage = statusStages.find(function(s) { return bestLine >= s.min && bestLine <= s.max; }) || statusStages[statusStages.length - 1];
   document.getElementById('status-emoji').textContent = stage.emoji;
   document.getElementById('status-text').textContent = stage.text;
+
+  renderAllProgressBars();
 }
 
 // ── Winner modal ─────────────────────────────────────────────────────────────
@@ -1082,7 +1192,8 @@ async function resetGame() {
       claimedLines: [],
       bingos: 0,
       lastBingoAt: 0,
-      lastBingoKey: ''
+      lastBingoKey: '',
+      firstBingoAt: 0
     });
   });
   await batch.commit();
@@ -1120,25 +1231,57 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// ── Rename overlay ────────────────────────────────────────────────────────────
+var renameMode = false;
+
+function openRenameOverlay() {
+  var myId = getMyTeamId();
+  var myTeam = teams.find(function(t) { return t.id === myId; });
+  if (!myTeam) return;
+  renameMode = true;
+  document.getElementById('overlay-title').textContent = 'Rename your team';
+  document.getElementById('overlay-subtitle').textContent = 'Enter a new name for your team.';
+  document.getElementById('join-game-btn').textContent = 'Save';
+  var input = document.getElementById('team-name-input');
+  input.value = myTeam.name || '';
+  document.getElementById('name-entry-overlay').classList.remove('hidden');
+  input.focus();
+  input.select();
+}
+
+function handleOverlaySubmit() {
+  var input = document.getElementById('team-name-input');
+  var name = (input.value || '').trim();
+  if (!name) { alert('Please enter a team name'); return; }
+
+  if (renameMode) {
+    var myId = getMyTeamId();
+    if (myId) setTeamName(myId, name);
+    document.getElementById('name-entry-overlay').classList.add('hidden');
+    renameMode = false;
+  } else {
+    setPlayerId(generateUuid());
+    setInitialTeamName(name);
+    document.getElementById('name-entry-overlay').classList.add('hidden');
+    initMultiplayer();
+  }
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 (function startApp() {
   if (getPlayerId()) {
     document.getElementById('name-entry-overlay').classList.add('hidden');
     initMultiplayer();
   } else {
-    var btn = document.getElementById('join-game-btn');
-    var input = document.getElementById('team-name-input');
-    if (btn && input) {
-      btn.addEventListener('click', function() {
-        var name = (input.value || '').trim();
-        if (!name) { alert('Please enter a team name'); return; }
-        setPlayerId(generateUuid());
-        setInitialTeamName(name);
-        document.getElementById('name-entry-overlay').classList.add('hidden');
-        initMultiplayer();
-      });
-      input.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.click(); });
-    }
+    document.getElementById('overlay-title').textContent = 'Name your team';
+    document.getElementById('overlay-subtitle').textContent = 'Choose a team name. You control your team\'s board and everyone can see your progress.';
+    document.getElementById('join-game-btn').textContent = 'Join game';
+  }
+  var btn = document.getElementById('join-game-btn');
+  var input = document.getElementById('team-name-input');
+  if (btn && input) {
+    btn.addEventListener('click', handleOverlaySubmit);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.click(); });
   }
 })();
 
@@ -1184,7 +1327,8 @@ async function initMultiplayer() {
         bingos: Number.isFinite(data.bingos) ? data.bingos : 0,
         claimedLines: new Set(Array.isArray(data.claimedLines) ? data.claimedLines : []),
         lastBingoAt: Number.isFinite(data.lastBingoAt) ? data.lastBingoAt : 0,
-        lastBingoKey: data.lastBingoKey || ''
+        lastBingoKey: data.lastBingoKey || '',
+        firstBingoAt: Number.isFinite(data.firstBingoAt) ? data.firstBingoAt : 0
       });
     });
 
@@ -1217,7 +1361,7 @@ async function initMultiplayer() {
       var prev = lastBingoAtByTeam.get(t.id) || 0;
       if (t.lastBingoAt && t.lastBingoAt > prev && t.lastBingoAt >= clientStartedAt) {
         animateBingoLine(t.lastBingoKey);
-        showWinner(t);
+        if (isMyTeam(t.id)) showWinner(t);
       }
       lastBingoAtByTeam.set(t.id, t.lastBingoAt || 0);
     });
@@ -1246,6 +1390,7 @@ window.showReflection = showReflection;
 window.resetGame = resetGame;
 window.closeModal = closeModal;
 window.copyGameLink = copyGameLink;
+window.openRenameOverlay = openRenameOverlay;
 </script>
 </body>
 </html>
